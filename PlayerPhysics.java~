@@ -1,0 +1,6 @@
+//Player physics (movement, shooting, map interaction, etc.) 
+public class PlayerPhysics {
+    
+    /* ADD YOUR CODE HERE */
+    
+}

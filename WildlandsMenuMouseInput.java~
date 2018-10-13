@@ -1,0 +1,60 @@
+/**
+ * Auto Generated Java Class.
+ */
+
+import java.awt.event.MouseListener;    
+import java.awt.event.MouseEvent; 
+
+public class WildlandsMenuMouseInput implements MouseListener{
+    
+    public void mousePressed (MouseEvent e){    
+        
+
+        
+        int mouseX = e.getX(); 
+        int mouseY = e.getY(); 
+        
+  //      Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_MAINMENU;  
+        if (  Wildlands.state == Wildlands.WILDLANDS_STATE.WILDLANDS_MAINMENU){
+        if (mouseX > 541 && mouseX < 1001 && mouseY > 195 && mouseY < 285){
+            Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_GAME;  
+            System.out.println("THE GAME HAS STARTED"); 
+        }
+        else if (mouseX > 541 && mouseX < 1001 && mouseY > 298 && mouseY < 383){
+            Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_INSTRUCTMENU; 
+            System.out.println("THE INSTRUCT MENU"); 
+        }
+        else if (mouseX > 541 && mouseX < 1001 && mouseY > 395 && mouseY < 483){
+            Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_HIGHSCOREMENU;    
+            System.out.println("THE HIGHSCORE MENU"); 
+        }
+        else if (mouseX > 541 && mouseX < 1001 && mouseY > 495 && mouseY < 581){
+            Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_CREDITSMENU;    
+            System.out.println("THE CREDITS MENU"); 
+        }
+        else if (mouseX > 541 && mouseX < 1001 && mouseY > 593 && mouseY < 679){
+            Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_EXITMENU;    
+            System.out.println("THE EXIT MENU"); 
+        }   
+        }
+        else if (Wildlands.state != Wildlands.WILDLANDS_STATE.WILDLANDS_MAINMENU && Wildlands.state != Wildlands.WILDLANDS_STATE.WILDLANDS_GAME){
+            if (mouseX > 254 && mouseX < 679 && mouseY > 467 && mouseY < 766){       
+                Wildlands.state = Wildlands.WILDLANDS_STATE.WILDLANDS_MAINMENU; 
+            }
+        } 
+        else if (Wildlands.state == Wildlands.WILDLANDS_STATE.WILDLANDS_EXITMENU){
+            if (mouseX > 254 && mouseX < 679 && mouseY > 467 && mouseY < 766){       
+            } 
+            else if (mouseX > 254 && mouseX < 679 && mouseY > 467 && mouseY < 766){              
+                System.exit(1); 
+            }
+        }    
+   //     }while(Wildlands.state != Wildlands.WILDLANDS_STATE.WILDLANDS_MAINMENU); 
+        
+    }     
+    public void mouseReleased(MouseEvent e){}
+    public void mouseEntered(MouseEvent e){}
+    public void mouseExited(MouseEvent e){}
+    public void mouseClicked(MouseEvent e){}   
+    
+}

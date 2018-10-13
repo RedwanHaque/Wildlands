@@ -1,0 +1,1191 @@
+/*   
+ * Wildlands   
+ * Desc: Final Project - A top down infinite shooter with a barren lands theme 
+ * By: Redwan Haque 
+ * Monday, December 18, 2017   
+ */
+
+import javax.swing.JComponent; 
+import javax.swing.JFrame; 
+import javax.swing.JPanel;          
+import javax.swing.JLabel; 
+import javax.swing.JTextField; 
+import javax.swing.JButton; 
+import java.awt.GridBagLayout; 
+import java.awt.Color; 
+import java.awt.Dimension; 
+import java.awt.Graphics; 
+import java.awt.Rectangle;    
+import java.awt.Font;    
+import java.awt.event.KeyListener;     
+import java.awt.event.MouseListener; 
+import java.awt.event.MouseMotionListener; 
+import java.awt.event.ActionListener; 
+import java.awt.event.ActionEvent;    
+import java.awt.event.KeyEvent;    
+import java.awt.event.MouseEvent;      
+import java.io.File;                        
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;   
+import java.util.Arrays; 
+import javax.sound.sampled.AudioSystem; 
+import javax.sound.sampled.Clip;    
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;   
+import java.util.Scanner; 
+
+public class Wildlands { 
+    
+    //WINDOW PROPERTIES
+    static JFrame gameWindow; 
+    static GraphicsPanel canvas;   
+    static JPanel panel; 
+    private static final int WINDOWWIDTH = 1600; 
+    private static final int WINDOWHEIGHT = 900; 
+    private static final int TOP = 0; 
+    private static final int BOTTOM = 900; 
+    private static final int LEFT = 0; 
+    private static final int RIGHT = 1600;       
+    
+    static JPanel startUpPanel; 
+    static JLabel messageLabel; 
+    static JTextField playerNameField; 
+    static JButton confirmNameButton; 
+    
+    //MOUSE LOCATION PROPERTIES  
+    static int mouseClickX = 0;  
+    static int mouseClickY = 0;  
+    static int mouseMotionX = 0; 
+    static int mouseMotionY = 0; 
+    
+    //PLAYABLE CHARACTER IMAGE PROPERTIES   
+    static String playerState = "stand normal";    
+    static int playerPicNum = 1;    
+    static BufferedImage[] playerStatePic = new BufferedImage[31];
+    static int[] nextRightPic = {1,2,3,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+    static int[] nextLeftPic = {4,4,4,4,5,6,7,8,5,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4};       
+    static int[] nextMoveUpPic =   {15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,17,18,19,16,15,15,15,15,15,15,15,15,15,15,15}; 
+    static int[] nextMoveDownPic = {23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,24,25,26,27,24,23,23,23};    
+    static int[] nextMoveUpRightPic = {15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,17,18,19,16,15,15,15,15,15,15,15,15,15,15,15}; 
+    static int[] nextMoveUpLeftPic =  {19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,19,20,21,22,23,20,19,19,19,19,19,19,19,19}; 
+    static int[] nextMoveDownRightPic = {25,27,29,31,31,31,25,27,29,29,29,31,27,27,29,29,31,31,29,29,31,25,27,25,25,27,29,31,27,25,31,27}; 
+    static int[] nextMoveDownLeftPic = {23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,23,24,25,26,27,24,23,23,23};
+    static int[] nextDeadPlayerPic = {};
+    
+    //PLAYABLE CHARACTER PROPERTIES 
+    static int PLAYER_RUN_SPEED = 17;   
+    static int playerX = 512; 
+    static int playerY = 384;      
+    final static int PLAYER_H = 90; 
+    final static int PLAYER_W = 85; 
+    static int playerVy = 0; 
+    static int playerVx = 0;       
+    static Rectangle playerHitBox = new Rectangle(playerX,playerY,PLAYER_W,PLAYER_H); 
+    
+    //PLAYABLE CHARACTER BULLET PROPERTIES 
+    static final int NUM_PLAYER_BULLETS = 50;      
+    static int currentBullet = 0; 
+    static int[] playerBulletX = new int[NUM_PLAYER_BULLETS];            
+    static int[] playerBulletY = new int[NUM_PLAYER_BULLETS]; 
+    static int[] playerBulletStepX = new int[NUM_PLAYER_BULLETS]; 
+    static int[] playerBulletStepY = new int[NUM_PLAYER_BULLETS]; 
+    static float[] playerBulletAngle = new float[NUM_PLAYER_BULLETS]; 
+    static Rectangle[] playerBulletHitBox = new Rectangle[NUM_PLAYER_BULLETS];    
+    static boolean[] playerBulletVisible = new boolean[NUM_PLAYER_BULLETS];    
+    static final int PLAYER_BULLET_VELOCITY = 50;      
+    static final int BULLET_D = 15;    
+    static int playerHealthCounter = 5; 
+    
+    //BOOLEAN FLAGS 
+    private static boolean startGame = true;    
+    private static boolean mainMenuSelect = false;     
+    private static boolean instructMenuSelect = false; 
+    private static boolean highscoreMenuSelect = false; 
+    private static boolean creditsMenuSelect = false; 
+    private static boolean exitMenuSelect = false; 
+    
+    //IMAGES 
+    static BufferedImage mainMenuBackground;       
+    static BufferedImage instructMenuBackground; 
+    static BufferedImage highscoreMenuBackground; 
+    static BufferedImage creditsMenuBackground; 
+    static BufferedImage exitMenuBackground; 
+    static BufferedImage gameBackground;         
+    static BufferedImage endGameBackground; 
+    static BufferedImage playerHealthIndicatorHeart;    
+    
+    //ENEMY 1 (SAVAGE) CHARACTERISTICS    
+    static int numSavageEnemy = 10;    
+    static BufferedImage[] savageEnemyPic = new BufferedImage[numSavageEnemy];     
+    static Rectangle[] savageEnemyHitBox = new Rectangle[numSavageEnemy];   
+    static int[] savageEnemyX = new int[numSavageEnemy];    
+    static int[] savageEnemyY = new int[numSavageEnemy];    
+    static int[] savageEnemyStepX = new int[numSavageEnemy]; 
+    static int[] savageEnemyStepY = new int[numSavageEnemy];    
+    static boolean[] savageEnemyVisible = new boolean[numSavageEnemy];    
+    static float[] savageEnemyAngle = new float[numSavageEnemy]; 
+    static final int SAVAGE_ENEMY_VELOCITY = 7;    
+    static int savageEnemyHeight; 
+    static int savageEnemyWidth;    
+    
+    //ENEMY 2 (HOOLIGAN) CHARACTERISTICS 
+    static int numHooliganEnemy = 7; 
+    static BufferedImage[] hooliganEnemyPic = new BufferedImage[numHooliganEnemy]; 
+    static Rectangle[] hooliganEnemyHitBox = new Rectangle[numHooliganEnemy];      
+    static int[] hooliganHealth = new int[numHooliganEnemy]; 
+    static int[] hooliganEnemyX = new int[numHooliganEnemy]; 
+    static int[] hooliganEnemyY = new int[numHooliganEnemy]; 
+    static int[] hooliganEnemyStepX = new int[numHooliganEnemy]; 
+    static int[] hooliganEnemyStepY = new int[numHooliganEnemy]; 
+    static boolean[] hooliganEnemyVisible = new boolean[numHooliganEnemy]; 
+    static float[] hooliganEnemyAngle = new float[numHooliganEnemy];       
+    static BufferedImage[] hooliganGunPic = new BufferedImage[numHooliganEnemy];            
+    static BufferedImage[] hooliganGunRotatePic = new BufferedImage[numHooliganEnemy]; 
+    static Rectangle[] hooliganGunHitBox = new Rectangle[numHooliganEnemy];          
+    static int hooliganGunHeight; 
+    static int hooliganGunWidth; 
+    static final int HOOLIGAN_ENEMY_VELOCITY = 5; 
+    static int hooliganEnemyHeight; 
+    static int hooliganEnemyWidth;    
+    
+    //ENEMY 2 SHOOTING CHARACTERISTICS 
+    static final int NUM_HOOLIGAN_BULLETS = 3;    
+    static float[] hooliganBulletAngle = new float[numHooliganEnemy];    
+    static int[] hooliganBulletStepX = new int[numHooliganEnemy]; 
+    static int[] hooliganBulletStepY = new int[numHooliganEnemy];     
+    static int[] hooliganBulletX = new int[numHooliganEnemy];   
+    static int[] hooliganBulletY = new int[numHooliganEnemy]; 
+    static boolean[] hooliganBulletVisible = new boolean[numHooliganEnemy];     
+    static Rectangle[] hooliganBulletHitBox = new Rectangle[numHooliganEnemy];           
+    static final int HOOLIGAN_BULLET_VELOCITY = 25; 
+//    static int[] hooliganShootInterval = new int[numHooliganEnemy]; 
+    
+    //KEYBOARD AND MOUSE LISTENERS 
+    static MyKeyListener playerMovementListener = new MyKeyListener();    
+    static GamePlayMouseListener gamePlayMouseListener = new GamePlayMouseListener();      
+    static GamePlayMouseMotionListener gamePlayMouseMotionListener = new GamePlayMouseMotionListener(); 
+    
+    //DIFFERENCE BETWEEN PLAYER X AND ENEMY X AND PLAYER Y AND ENEMY Y VALUES 
+    static int diffX = 0; 
+    static int diffY = 0;    
+    
+    //GAME RUN VARIABLES    
+    static int waveNum = 1; 
+    static final double NUM_ENEMY_MULTIPLIER = 1.15;    
+    static long gameStartTime = 0; 
+    static long gameMeasuredTime = 0;    
+    static int waveCounter = 0;    
+    static boolean enemyAlive = true;    
+    private static WildlandsMenu menu;   
+    static Font waveCounterFont = new Font("Helvetica", Font.BOLD,56);            
+    static Font displayScoreFont = new Font("Helvetica",Font.BOLD,155); 
+    static Thread menuMusicThread;    
+    static Thread gameMusicThread; 
+    static String playerName = ""; 
+    static int playerScore = 0; 
+    
+    //Game state possibilities 
+    public static enum WILDLANDS_STATE{
+        WILDLANDS_MAINMENU, 
+        WILDLANDS_INSTRUCTMENU, 
+        WILDLANDS_HIGHSCOREMENU, 
+        WILDLANDS_CREDITSMENU, 
+        WILDLANDS_EXITMENU,
+        WILDLANDS_GAME,
+        WILDLANDS_ENDGAME
+    }; 
+    
+    //Creates variable of type WILDLANDS_STATE 
+    public static WILDLANDS_STATE state = WILDLANDS_STATE.WILDLANDS_MAINMENU;     
+    
+    //Main Method 
+    public static void main(String[] args) {      
+        
+        Scanner keyboard = new Scanner (System.in);    
+        
+        System.out.print("ENTER YOUR NAME: "); 
+        playerName = keyboard.nextLine(); 
+        
+        gameWindow = new JFrame("Wildlands"); 
+        gameWindow.setSize(WINDOWWIDTH, WINDOWHEIGHT); 
+        gameWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);           
+        
+        //Creates the canvas and adds the listeners to it
+        canvas = new GraphicsPanel();   
+        canvas.setBounds(0,0,1600,900); 
+        canvas.addKeyListener(playerMovementListener);          
+        canvas.addMouseListener(gamePlayMouseListener);    
+        canvas.addMouseMotionListener(gamePlayMouseMotionListener);    
+        canvas.addMouseListener(new WildlandsMenuMouseInput()); 
+        gameWindow.add(canvas);          
+        
+        menuMusicThread = new Thread(new MenuBackgroundMusic());       
+        gameMusicThread = new Thread(new GameBackgroundMusic()); 
+        menuMusicThread.start();       
+
+        initializeEnemyArrayValues(); 
+        loadPlayableCharacterImages(); 
+        loadMiscImages(); 
+        trackSavageEnemyCount(); 
+        trackHooliganEnemyCount(); 
+        System.out.println(state); 
+        gameWindow.setVisible(true);      
+        gameWindow.setResizable(false);    
+        gameWindow.setLocationRelativeTo(null);    
+        runMainGameLoop();   
+    }//Main Method   
+    
+ 
+    
+//*********************************************************************************************************************
+//||||||||||||||||||||||||||||||||||||||||||||||||||| MAIN GAME LOOP ||||||||||||||||||||||||||||||||||||||||||||||||||
+//*********************************************************************************************************************
+    
+    public static void runMainGameLoop(){   
+      
+        while(true){              
+
+            if (state == WILDLANDS_STATE.WILDLANDS_GAME){       
+                System.out.println("The game is running"); 
+                waveCounter++;       
+                
+                while(enemyAlive && startGame){    
+                    gameWindow.repaint(); 
+                    try {Thread.sleep(35);} catch(Exception e){}   
+                    //Move Player in horizontal direction
+                    playerX += playerVx; 
+                    //Move Player in vertial direction 
+                    playerY += playerVy;
+                    
+                    playerHitBox.setLocation(playerX,playerY); 
+                    
+                    if (playerY - PLAYER_RUN_SPEED < TOP-10){ 
+                        playerY = TOP + PLAYER_RUN_SPEED-10; 
+                        playerVy = 0; 
+                    } 
+                    else if (playerY + PLAYER_RUN_SPEED + PLAYER_H > BOTTOM-25){ 
+                        playerY = BOTTOM - PLAYER_RUN_SPEED - PLAYER_H-25; 
+                        playerVy = 0; 
+                    } 
+                    else if (playerX - PLAYER_RUN_SPEED < LEFT){ 
+                        playerX = LEFT + PLAYER_RUN_SPEED;
+                        playerVx = 0; 
+                    } 
+                    else if (playerX + PLAYER_RUN_SPEED + PLAYER_W > RIGHT){ 
+                        playerX = RIGHT - PLAYER_RUN_SPEED - PLAYER_W; 
+                        playerVx = 0;    
+                    }
+                    
+                    //Select the player's picture in that moment 
+                    if (playerState == "stand left") 
+                        playerPicNum = 2; 
+                    else if (playerState == "stand right") 
+                        playerPicNum = 1; 
+                    else if (playerState == "look down") 
+                        playerPicNum = 14; 
+                    else if (playerState == "look up") 
+                        playerPicNum = 12; 
+                    else if (playerState == "run left")   
+                        playerPicNum = nextLeftPic[playerPicNum]; 
+                    else if (playerState == "run right")   
+                        playerPicNum = nextRightPic[playerPicNum];      
+                    else if (playerState == "run up")   
+                        playerPicNum = nextMoveUpPic[playerPicNum]; 
+                    else if (playerState == "run down")   
+                        playerPicNum = nextMoveDownPic[playerPicNum]; 
+                    else if (playerState == "hit") //Show the picture of player facing the same direction but with a flash on top 
+                        try {Thread.sleep(100);} catch (Exception e){}    
+                    else if (playerState == "look up-right") 
+                        playerPicNum = 13; 
+                    else if (playerState == "look up-left") 
+                        playerPicNum = 12; 
+                    else if (playerState == "look down-right") 
+                        playerPicNum = 11; 
+                    else if (playerState == "look down-left") 
+                        playerPicNum = 10; 
+                    else if (playerState == "run up-right") 
+                        playerPicNum = nextMoveUpRightPic[playerPicNum]; 
+                    else if (playerState == "run up-left") 
+                        playerPicNum = nextMoveUpLeftPic[playerPicNum]; 
+                    else if (playerState == "run down-right") 
+                        playerPicNum = nextMoveDownRightPic[playerPicNum]; 
+                    else if (playerState == "run down-left") 
+                        playerPicNum = nextMoveDownLeftPic[playerPicNum]; 
+                    else if (playerState == "dead") 
+                        playerPicNum = nextDeadPlayerPic[playerPicNum];    
+                    else if (playerState == "stand normal"){ 
+                        playerPicNum = 9;           
+                    }                
+                    
+                    //Player Bullet Movement Update
+                    for (int bulletNum = 0; bulletNum < NUM_PLAYER_BULLETS; bulletNum++){      
+                        //If player bullet goes out of bounds then the bullet is not shown anymore 
+                        if (playerBulletY[bulletNum] > BOTTOM || playerBulletY[bulletNum] < TOP || playerBulletX[bulletNum] < LEFT || playerBulletX[bulletNum] > RIGHT)    
+                            playerBulletVisible[bulletNum] = false;    
+                        //Only updates bullet coordinates if it still visible 
+                        if (playerBulletVisible[bulletNum]){          
+                            playerBulletX[bulletNum] += playerBulletStepX[bulletNum]; 
+                            playerBulletY[bulletNum] += playerBulletStepY[bulletNum]; 
+                            playerBulletHitBox[bulletNum].setLocation(playerBulletX[bulletNum],playerBulletY[bulletNum]);  
+                        } 
+                    }   
+                    
+                    //Savage Enemy Physics   
+                    for (int a = 0; a < numSavageEnemy; a++){      
+                        if (savageEnemyVisible[a]){
+                            //Savage enemy follow player 
+                            savageEnemyAngle[a] = (float)(Math.atan2(playerY - savageEnemyY[a], playerX - savageEnemyX[a]));  
+                            savageEnemyStepX[a] = (int)(SAVAGE_ENEMY_VELOCITY*Math.cos(savageEnemyAngle[a])); 
+                            savageEnemyStepY[a] = (int)(SAVAGE_ENEMY_VELOCITY*Math.sin(savageEnemyAngle[a]));     
+                            savageEnemyX[a] += savageEnemyStepX[a]; 
+                            savageEnemyY[a] += savageEnemyStepY[a]; 
+                            savageEnemyHitBox[a].setLocation(savageEnemyX[a],savageEnemyY[a]);        
+                            //Collision detection with other Savage enemies 
+                            for (int b = 0; b < numSavageEnemy; b++){
+                                if (savageEnemyHitBox[a].intersects(savageEnemyHitBox[b]) && a != b && savageEnemyVisible[b]){
+                                    savageEnemyStepX[a] = 0; 
+                                    savageEnemyStepY[a] = 0;          
+                                }   
+                            }      
+                            //Collision detection with player bullets 
+                            for (int c = 0; c < currentBullet; c++){   
+                                if (playerBulletHitBox[c].intersects(savageEnemyHitBox[a]) && playerBulletVisible[c]){
+                                    playerBulletVisible[c] = false; 
+                                    savageEnemyVisible[a] = false; 
+                                }
+                            }      
+                            //Collision Detection with the player 
+                            if (savageEnemyHitBox[a].intersects(playerHitBox)){ 
+                                playerHealthCounter--;          
+                                savageEnemyVisible[a] = false; 
+                            } 
+                        } 
+                    }   
+                    
+                    //Hooligan Enemy Phyisics 
+                    for (int a = 0; a < numHooliganEnemy; a++){
+                        if (hooliganEnemyVisible[a]){   //MAKE CALCULATING STEP X AND STEP Y INTO A METHOD    
+                            //Hooligan enemy follow player 
+                            hooliganEnemyAngle[a] = (float)(Math.atan2(playerY - hooliganEnemyY[a],playerX - hooliganEnemyX[a])); 
+                            hooliganEnemyStepX[a] = (int)(HOOLIGAN_ENEMY_VELOCITY*Math.cos(hooliganEnemyAngle[a])); 
+                            hooliganEnemyStepY[a] = (int)(HOOLIGAN_ENEMY_VELOCITY*Math.sin(hooliganEnemyAngle[a]));   
+                            hooliganEnemyX[a] += hooliganEnemyStepX[a]; 
+                            hooliganEnemyY[a] += hooliganEnemyStepY[a];     
+                            hooliganEnemyHitBox[a].setLocation(hooliganEnemyX[a],hooliganEnemyY[a]);    
+                            hooliganGunHitBox[a].setLocation(hooliganEnemyX[a]+55,hooliganEnemyY[a]+55);       
+                            //Hooligan enemy bullets 
+                            //Bullet Respawn 
+                            if (!hooliganBulletVisible[a]){   
+                                hooliganBulletAngle[a] = (float)(Math.atan2(playerY-hooliganEnemyX[a]+25,playerX-hooliganEnemyY[a]+25)); 
+                                hooliganBulletStepX[a] = (int)(HOOLIGAN_BULLET_VELOCITY*Math.sin(hooliganBulletAngle[a])); 
+                                hooliganBulletStepY[a] = (int)(HOOLIGAN_BULLET_VELOCITY*Math.cos(hooliganBulletAngle[a]));    
+                                hooliganBulletX[a] = hooliganEnemyX[a]+25; 
+                                hooliganBulletY[a] = hooliganEnemyY[a]+25;    
+                                hooliganBulletHitBox[a] = new Rectangle(hooliganBulletX[a],hooliganBulletY[a],BULLET_D,BULLET_D); 
+                         //       hooliganGunPic[a] = rotateGunImage(hooliganGunRotatePic[a],hooliganBulletAngle[a]); 
+                                hooliganBulletVisible[a] = true;    
+                            }      
+                            //If bullet visible then update the location of it 
+                            else if (hooliganBulletVisible[a]){
+                                hooliganBulletX[a] += hooliganBulletStepX[a]; 
+                                hooliganBulletY[a] += hooliganBulletStepY[a];                        
+                                hooliganBulletHitBox[a].setLocation(hooliganBulletX[a],hooliganBulletY[a]);    
+                                
+                                if (hooliganBulletHitBox[a].intersects(playerHitBox)){  
+                                    playerHealthCounter--;    
+                                    hooliganBulletVisible[a] = false; 
+                                }              
+                            }     
+                            //Resets bullet visibility if the requirements are met
+                            else if (hooliganBulletX[a]>LEFT || hooliganBulletX[a]<RIGHT || hooliganBulletY[a]>TOP || hooliganBulletY[a]<BOTTOM) 
+                                hooliganBulletVisible[a] = false; 
+
+                            //Hooligan enemy collision detection with other Hooligan enemies 
+                            for (int b = 0; b < numHooliganEnemy; b++){
+                                if (hooliganEnemyHitBox[a].intersects(hooliganEnemyHitBox[b]) && a!=b && hooliganEnemyVisible[b]){
+                                    hooliganEnemyStepX[b] = 0;   
+                                    hooliganEnemyStepY[b] = 0; 
+                                } 
+                            }    
+                            //Hooligan enemy collision detection with player bullets 
+                            for (int c = 0; c < currentBullet; c++){
+                                if (playerBulletHitBox[c].intersects(hooliganEnemyHitBox[a]) && playerBulletVisible[c]){
+                                    playerBulletVisible[c] = false; 
+                                    hooliganEnemyVisible[a] = false;    
+                                }
+                            }         
+                            //Hooligan enemy collision detection with the player 
+                            if (hooliganEnemyHitBox[a].intersects(playerHitBox)){
+                                playerHealthCounter--; 
+                                hooliganEnemyVisible[a] = false;    
+                            }                
+                        }             
+                    }   
+                    //If player health counter reaches 0 then the game ends 
+                    if (playerHealthCounter == 0) 
+                        startGame = false;    
+                    
+                    enemyAlive = checkForEnemyAllAlive(savageEnemyVisible,hooliganEnemyVisible); 
+                }       
+                if (playerHealthCounter == 0) 
+                    state = WILDLANDS_STATE.WILDLANDS_ENDGAME; 
+                waveNum++;    
+                playerHealthCounter++; 
+                enemyAlive = true; 
+                gameWindow.repaint(); 
+                resetEnemyArrayValues();    
+                System.out.println(numSavageEnemy + "   " + numHooliganEnemy); 
+            }          
+        }
+    }   
+    
+//---------------------------------------------------------------------------------------------------------------------
+    
+    //Method used for rotating the enemy and player guns 
+    public static BufferedImage rotateGunImage(BufferedImage gunImage, float gunPointAngle){
+        AffineTransform transform = new AffineTransform();
+        double centerX = gunImage.getWidth()/2-10;
+        double centerY = gunImage.getHeight()/2+25;  
+        transform.rotate(gunPointAngle, centerX, centerY);    
+        AffineTransformOp rotatedImage = new AffineTransformOp(transform,AffineTransformOp.TYPE_BILINEAR);
+        gunImage = rotatedImage.filter(gunImage, null);   
+        return gunImage;       
+    }   
+    
+    //---------------------------------------------------------------------------------------------------------------------
+    
+    //Method used to check if all the enemies are dead before the next wave can begin 
+    public static boolean checkForEnemyAllAlive(boolean[] enemy,boolean[] enemy2){
+        for (boolean enemyVisible:enemy)
+            if (enemyVisible) return true;    
+        for (boolean enemyVisible2:enemy2) 
+            if (enemyVisible2) return true; 
+        return false; 
+    }   
+    
+    //---------------------------------------------------------------------------------------------------------------------
+    
+    //Method used to increase the savage enemy count every wave and read the enemy pictures from the file 
+    public static void trackSavageEnemyCount(){
+        //Loads the enemy character picture from the file and assigns random initial x,y characteristics
+        for (int picNum = 0; picNum < numSavageEnemy; picNum++){
+            try{
+                savageEnemyPic[picNum] = ImageIO.read(new File("Images/Enemy Sprites/Savage Enemy.png")); 
+            } catch (IOException ex){}        
+            
+            savageEnemyX[picNum] = (int)(4500*Math.random() - 1600); 
+            if (savageEnemyX[picNum] >= 0 && savageEnemyX[picNum] <= 1600){
+                if (picNum%2 != 0) 
+                    savageEnemyY[picNum] = (int)(2500*Math.random()-2500); 
+                else 
+                    savageEnemyY[picNum] = (int)(4100*Math.random()-1600); 
+            }      
+            else 
+                savageEnemyY[picNum] = (int)(2500*Math.random()-1200);     
+            
+            //Initializes the height and width of the enemy 
+            if (picNum == 0){              
+                savageEnemyHeight = savageEnemyPic[picNum].getHeight(); 
+                savageEnemyWidth = savageEnemyPic[picNum].getWidth();    
+            }
+            savageEnemyHitBox[picNum] = new Rectangle(savageEnemyX[picNum],savageEnemyY[picNum],savageEnemyWidth,savageEnemyHeight-10);    
+        }   
+    }      
+    
+    //---------------------------------------------------------------------------------------------------------------------
+    
+    public static void trackHooliganEnemyCount(){
+        for (int picNum = 0; picNum < numHooliganEnemy; picNum++){   
+            try{    
+                hooliganEnemyPic[picNum] = ImageIO.read(new File("Images/Enemy Sprites/Hooligan Enemy.png"));     
+                hooliganGunPic[picNum] = ImageIO.read(new File("Images/Enemy Sprites/Hooligan Gun.png"));        
+                hooliganGunRotatePic[picNum] = ImageIO.read(new File("Images/Enemy Sprites/Hooligan Gun.png")); 
+            } catch(Exception ex){} 
+            
+            hooliganEnemyX[picNum] = (int)(4500*Math.random()-1600); 
+            if (hooliganEnemyX[picNum] >= 0 && hooliganEnemyX[picNum] <= 1600){ 
+                if (picNum%2 != 0)   
+                    hooliganEnemyY[picNum] = (int)(Math.random()-2500); 
+                else     
+                    hooliganEnemyY[picNum] = (int)(4100*Math.random()-2500); 
+            }       
+            else 
+                hooliganEnemyY[picNum] = (int)(2500*Math.random()-1200); 
+            
+            //Initializes the height and width of the enemy and the enemy gun   
+            if (picNum == 0){
+                hooliganEnemyHeight = hooliganEnemyPic[picNum].getHeight(); 
+                hooliganEnemyWidth = hooliganEnemyPic[picNum].getWidth();    
+                hooliganGunHeight = hooliganGunPic[picNum].getHeight(); 
+                hooliganGunWidth = hooliganGunPic[picNum].getWidth(); 
+            }   
+            hooliganEnemyHitBox[picNum] = new Rectangle(hooliganEnemyX[picNum],hooliganEnemyY[picNum],hooliganEnemyWidth,hooliganEnemyHeight-4);       
+            hooliganGunHitBox[picNum] = new Rectangle(hooliganEnemyX[picNum]+35,hooliganEnemyY[picNum]+55,hooliganGunWidth,hooliganGunHeight); 
+        }
+    }      
+    
+//---------------------------------------------------------------------------------------------------------------------
+    
+    public static void loadPlayableCharacterImages(){
+        //load the playable character pictures from the file 
+        for (int picNum = 0; picNum < 31; picNum++){ 
+            try{                               
+                playerStatePic[picNum] = ImageIO.read(new File("Images/Main Character Sprites/player" + Integer.toString(picNum) + ".png")); 
+            } catch (IOException ex){}    
+        }        
+    }      
+    
+//---------------------------------------------------------------------------------------------------------------------
+    
+    public static void loadMiscImages(){
+        try{    
+            mainMenuBackground = ImageIO.read(new File("Images/Menu Backgrounds/Main Menu Background.jpg"));        
+            instructMenuBackground = ImageIO.read(new File("Images/Menu Backgrounds/Wildlands Instructions.jpg")); 
+            highscoreMenuBackground = ImageIO.read(new File("Images/Menu Backgrounds/Wildlands High Score Background.jpg")); 
+            creditsMenuBackground = ImageIO.read(new File("Images/Menu Backgrounds/Wildands Credits Menu.jpg")); 
+            exitMenuBackground = ImageIO.read(new File("Images/Menu Backgrounds/Wildlands Exit Confrimation.jpg"));               
+            endGameBackground = ImageIO.read(new File("Images/Menu Backgrounds/Wildlands End Game Background.jpg")); 
+            gameBackground = ImageIO.read(new File("Images/Game Backgrounds/Desert Background.jpg"));               
+            playerHealthIndicatorHeart = ImageIO.read(new File("Images/Main Character Sprites/Health Indicator.png"));             
+        } catch (IOException ex){}      
+    }   
+    
+//---------------------------------------------------------------------------------------------------------------------
+    
+    public static void initializeEnemyArrayValues(){
+        Arrays.fill(savageEnemyVisible, true);    
+        Arrays.fill(hooliganEnemyVisible, true);    
+        Arrays.fill(hooliganBulletVisible, false);       
+        Arrays.fill(hooliganHealth, 2);   
+    }        
+    
+//---------------------------------------------------------------------------------------------------------------------
+    
+    public static void resetEnemyArrayValues(){
+        numSavageEnemy = (int)(numSavageEnemy*NUM_ENEMY_MULTIPLIER); 
+        numHooliganEnemy = (int)(numHooliganEnemy*NUM_ENEMY_MULTIPLIER); 
+        savageEnemyPic = new BufferedImage[numSavageEnemy]; 
+        hooliganEnemyPic = new BufferedImage[numHooliganEnemy]; 
+        savageEnemyX = new int[numSavageEnemy]; 
+        savageEnemyY = new int[numSavageEnemy]; 
+        hooliganEnemyX = new int[numHooliganEnemy]; 
+        hooliganEnemyY = new int[numHooliganEnemy]; 
+        savageEnemyStepX = new int[numSavageEnemy]; 
+        savageEnemyStepY = new int[numSavageEnemy]; 
+        hooliganEnemyStepX = new int[numHooliganEnemy]; 
+        hooliganEnemyStepY = new int[numHooliganEnemy];    
+        savageEnemyAngle = new float[numSavageEnemy]; 
+        hooliganEnemyAngle = new float[numHooliganEnemy]; 
+        savageEnemyHitBox = new Rectangle[numSavageEnemy]; 
+        hooliganEnemyHitBox = new Rectangle[numHooliganEnemy];     
+        hooliganGunPic = new BufferedImage[numHooliganEnemy]; 
+    //    hooliganShootInterval = new int[numHooliganEnemy];                     
+        hooliganGunHitBox = new Rectangle[numHooliganEnemy]; 
+        savageEnemyVisible = new boolean[numSavageEnemy]; 
+        hooliganEnemyVisible = new boolean[numHooliganEnemy]; 
+        hooliganBulletVisible = new boolean[numHooliganEnemy];    
+        hooliganBulletAngle = new float[numHooliganEnemy];    
+        hooliganBulletX = new int[numHooliganEnemy];     
+        hooliganBulletY = new int[numHooliganEnemy];     
+        hooliganBulletStepX = new int[numHooliganEnemy];  
+        hooliganBulletStepY = new int[numHooliganEnemy];  
+        hooliganBulletVisible = new boolean[numHooliganEnemy];  
+        hooliganBulletHitBox = new Rectangle[numHooliganEnemy];    
+        hooliganGunRotatePic = new BufferedImage[numHooliganEnemy];    
+        hooliganHealth = new int[numHooliganEnemy];    
+        Arrays.fill(hooliganHealth,2); 
+        trackSavageEnemyCount(); 
+        trackHooliganEnemyCount();             
+        initializeEnemyArrayValues(); 
+    }
+    
+//*********************************************************************************************************************
+//|||||||||||||||||||||||||||||||||||||||||||||||| GRAPHICS PANEL CLASS |||||||||||||||||||||||||||||||||||||||||||||||
+//*********************************************************************************************************************   
+    
+    static class GraphicsPanel extends JPanel{
+        public GraphicsPanel(){
+            setFocusable(true);
+            requestFocusInWindow();
+        }
+        public void paintComponent(Graphics g){    
+            super.paintComponent(g); 
+            
+            if (state == WILDLANDS_STATE.WILDLANDS_GAME){ 
+                
+                //Draws the game background 
+                g.drawImage(gameBackground,0,0,this); 
+                // draw the current picture of the character 
+                g.drawImage(playerStatePic[playerPicNum],playerX,playerY,this);    
+                
+          //      canvas.repaint(); 
+                
+                //Draws the player bullets 
+                g.setColor(Color.BLACK); 
+                for (int i = 0; i < playerBulletX.length; i++){   
+                    if (playerBulletVisible[i]) 
+                        g.fillOval(playerBulletX[i],playerBulletY[i],BULLET_D,BULLET_D);
+                }      
+                
+                //Draws the savage enemies and their respective health bars   
+                g.setColor(Color.RED); 
+                for (int x = 0; x < savageEnemyPic.length; x++){   
+                    if (savageEnemyVisible[x]){
+                        g.drawImage(savageEnemyPic[x],savageEnemyX[x],savageEnemyY[x],this);       
+                        g.fillRect(savageEnemyX[x],savageEnemyY[x]+savageEnemyHeight,savageEnemyWidth,5);    
+                    }
+                }      
+                
+                //Draws the hooligan enemies and their respective health bars and guns 
+                for (int a = 0; a < hooliganEnemyPic.length; a++){
+                    if (hooliganEnemyVisible[a]){
+                        g.drawImage(hooliganEnemyPic[a],hooliganEnemyX[a],hooliganEnemyY[a],this); 
+                        g.fillRect(hooliganEnemyX[a]-7,hooliganEnemyY[a]+hooliganEnemyHeight+5,hooliganHealth[a]*hooliganEnemyWidth/2+25,5);      
+                        g.drawImage(hooliganGunPic[a],hooliganEnemyX[a]+35,hooliganEnemyY[a]+42,this);        
+                    //    for (int b = 0; b < NUM_HOOLIGAN_BULLETS; b++){
+                            if (hooliganBulletVisible[a]) 
+                                g.fillOval(hooliganBulletX[a],hooliganBulletY[a],BULLET_D,BULLET_D); 
+                 //       }
+                    }   
+                }
+                
+                //Player Aiming Guide Line 
+                g.fillOval(mouseMotionX-5,mouseMotionY-5,12,12);   
+                g.setColor(Color.BLACK); 
+                g.drawLine(playerX+55,playerY+55,mouseMotionX,mouseMotionY);   
+                
+                //Draws the number of hearts (health) that the player has left 
+                for (int playerHealth = 1; playerHealth < playerHealthCounter+1; playerHealth++){        
+                    g.drawImage(playerHealthIndicatorHeart,playerHealth*65,25,this); 
+                }       
+                
+                g.setFont(waveCounterFont); 
+                g.drawString("WAVE: " + waveNum,75,135); 
+            }      
+            else if (state == WILDLANDS_STATE.WILDLANDS_MAINMENU){   
+                g.drawImage(mainMenuBackground,0,0,this);          
+                canvas.repaint(); 
+            }      
+            else if (state == WILDLANDS_STATE.WILDLANDS_INSTRUCTMENU){    
+                g.drawImage(instructMenuBackground,0,0,this);    
+                canvas.repaint(); 
+            } 
+            else if (state == WILDLANDS_STATE.WILDLANDS_HIGHSCOREMENU){    
+                g.drawImage(highscoreMenuBackground,0,0,this);    
+                canvas.repaint(); 
+            } 
+            else if (state == WILDLANDS_STATE.WILDLANDS_CREDITSMENU){
+                g.drawImage(creditsMenuBackground,0,0,this);    
+                canvas.repaint(); 
+            }   
+            else if (state == WILDLANDS_STATE.WILDLANDS_EXITMENU){
+                g.drawImage(exitMenuBackground,0,0,this);    
+                canvas.repaint(); 
+            }   
+            else if (state == WILDLANDS_STATE.WILDLANDS_ENDGAME){
+                g.drawImage(endGameBackground,0,0,this);      
+                g.setFont(displayScoreFont); 
+                g.setColor(Color.RED); 
+                g.drawString(Integer.toString(waveCounter),950,485);    
+                canvas.repaint(); 
+            }
+        }
+    } // paint method      
+    
+//*********************************************************************************************************************
+//||||||||||||||||||||||||||||||||||||||||||||KEYBOARD AND MOUSE LISTENERS ||||||||||||||||||||||||||||||||||||||||||||
+//*********************************************************************************************************************
+    
+    static class MyKeyListener implements KeyListener{ 
+        public void keyPressed(KeyEvent e){    
+            if (state == WILDLANDS_STATE.WILDLANDS_GAME){ 
+                int key = e.getKeyCode();    
+                //If 'w' is pressed 
+                if(key == KeyEvent.VK_W){
+                    if (playerState == "stand normal") 
+                        playerState = "look up"; 
+                    else if (playerState == "look up"){ 
+                        playerState = "run up";   
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run up"){   
+                        //nothing
+                    }else if (playerState == "look down") 
+                        playerState = "look up"; 
+                    else if (playerState == "run down"){   
+                        playerState = "run up";    
+                        playerVx = 0; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right") 
+                        playerState = "look up";   
+                    else if (playerState == "run right"){   
+                        playerState = "run up";    
+                        playerVx = 0;    
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look left") 
+                        playerState = "look up"; 
+                    else if (playerState == "run left"){   
+                        playerState = "run up"; 
+                        playerVx = 0;    
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }   
+                    else if (playerState == "look up-right") 
+                        playerState = "look up"; 
+                    else if (playerState == "run up-right"){   
+                        playerState = "run up"; 
+                        playerVx = 0;    
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left") 
+                        playerState = "look up"; 
+                    else if (playerState == "run up-left"){ 
+                        playerState = "run up"; 
+                        playerVx = 0;    
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-right") 
+                        playerState = "look up"; 
+                    else if (playerState == "run down-right"){ 
+                        playerState = "run up"; 
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = 0; 
+                    }else if (playerState == "look down-left") 
+                        playerState = "look up"; 
+                    else if (playerState == "run down-left"){ 
+                        playerState = "run up"; 
+                        playerVx = 0; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    } 
+                }      
+                //If 'a' is pressed 
+                else if(key == KeyEvent.VK_A){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look left"; 
+                    else if (playerState == "look up") 
+                        playerState = "look left"; 
+                    else if (playerState == "run up"){   
+                        playerState = "run left";   
+                        playerVy = 0; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down") 
+                        playerState = "look left";       
+                    else if (playerState == "run down"){   
+                        playerState = "run left";    
+                        playerVy = 0; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right") 
+                        playerState = "look left";   
+                    else if (playerState == "run right"){   
+                        playerState = "run left";    
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look left"){ 
+                        playerState = "run left";       
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run left"){   
+                        //nothing 
+                    }    
+                    else if (playerState == "look up-right") 
+                        playerState = "look left"; 
+                    else if (playerState == "run up-right"){   
+                        playerState = "run left";    
+                        playerVy = 0; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left") 
+                        playerState = "look left"; 
+                    else if (playerState == "run up-left"){ 
+                        playerState = "run left";    
+                        playerVy = 0; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-right") 
+                        playerState = "look left"; 
+                    else if (playerState == "run down-right"){ 
+                        playerState = "run left"; 
+                        playerVy = 0; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-left") 
+                        playerState = "look left"; 
+                    else if (playerState == "run down-left"){ 
+                        playerState = "run left"; 
+                        playerVy = 0; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                    } 
+                }      
+                //If 'd' is pressed 
+                else if(key == KeyEvent.VK_D){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look right"; 
+                    else if (playerState == "look up") 
+                        playerState = "look right"; 
+                    else if (playerState == "run up"){   
+                        playerState = "run right";       
+                        playerVy = 0; 
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down") 
+                        playerState = "look right";       
+                    else if (playerState == "run down"){   
+                        playerState = "run right";         
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right"){ 
+                        playerState = "run right";         
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run right"){   
+                        //nothing
+                    }else if (playerState == "look left") 
+                        playerState = "look right"; 
+                    else if (playerState == "run left"){    
+                        playerState = "run right";     
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-right")   
+                        playerState = "look right"; 
+                    else if (playerState == "run up-right"){   
+                        playerState = "run right";    
+                        playerVy = 0;   
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left") 
+                        playerState = "look right"; 
+                    else if (playerState == "run up-left"){ 
+                        playerState = "run right"; 
+                        playerVy = 0;   
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-right") 
+                        playerState = "look right"; 
+                    else if (playerState == "run down-right"){ 
+                        playerState = "run right"; 
+                        playerVy = 0; 
+                        playerVx = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-left") 
+                        playerState = "look right"; 
+                    else if (playerState == "run down-left"){ 
+                        playerState = "run right"; 
+                        playerVy = 0; 
+                        playerVx = PLAYER_RUN_SPEED; 
+                    } 
+                }      
+                //If 's' is pressed 
+                else if(key == KeyEvent.VK_S){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look down"; 
+                    else if (playerState == "look up") 
+                        playerState = "look down"; 
+                    else if (playerState == "run up"){   
+                        playerState = "run down";    
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down"){ 
+                        playerState = "run down";      
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run down"){   
+                        //nothing
+                    }else if (playerState == "look right") 
+                        playerState = "look down";   
+                    else if (playerState == "run right"){   
+                        playerState = "run down";    
+                        playerVx = 0; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look left") 
+                        playerState = "look down"; 
+                    else if (playerState == "run left"){      
+                        playerState = "run down";      
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-right")
+                        playerState = "look down";
+                    else if (playerState == "run up-right"){ 
+                        playerState = "look down";       
+                        playerVx = 0; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left")   
+                        playerState = "look down"; 
+                    else if (playerState == "run up-left"){ 
+                        playerState = "run down";    
+                        playerVx = 0; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-right")   
+                        playerState = "look down";
+                    else if (playerState == "run down-right"){ 
+                        playerState = "run down";              
+                        playerVx = 0; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-left")   
+                        playerState = "look down"; 
+                    else if (playerState == "run down-left"){   
+                        playerState = "look down";     
+                        playerVx = 0; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    } 
+                }      
+                //If 'w' and 'd' are pressed
+                else if(key == KeyEvent.VK_W && key == KeyEvent.VK_D){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look up-right"; 
+                    else if (playerState == "look up") 
+                        playerState = "look up-right"; 
+                    else if (playerState == "run up"){   
+                        playerState = "run up-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down") 
+                        playerState = "look up-right";          
+                    else if (playerState == "run down"){    
+                        playerState = "run up-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right") 
+                        playerState = "look up-right";   
+                    else if (playerState == "run right"){   
+                        playerState = "run up-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED;
+                    }else if (playerState == "look left") 
+                        playerState = "look up-right"; 
+                    else if (playerState == "run left"){   
+                        playerState = "run up-right";  
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED;
+                    }else if (playerState == "look up-right"){   
+                        playerState = "run up-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED;
+                    }else if (playerState == "run up-right"){ 
+                        //nothing 
+                    }else if (playerState == "look up-left")   
+                        playerState = "look up-right"; 
+                    else if (playerState == "run up-left"){ 
+                        playerState = "run up-right";   
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED;
+                    }else if (playerState == "run down-right") 
+                        playerState = "look up-right"; 
+                    else if (playerState == "run down-left"){    
+                        playerState = "run up-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }
+                }    
+                //If 'w' and 'a' are pressed 
+                else if(key == KeyEvent.VK_W && key == KeyEvent.VK_A){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look up-left"; 
+                    else if (playerState == "look up") 
+                        playerState = "look up-left"; 
+                    else if (playerState == "run up"){    
+                        playerState = "run up-left";    
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down") 
+                        playerState = "look up-left";          
+                    else if (playerState == "run down"){   
+                        playerState = "run up-left"; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right") 
+                        playerState = "look up-left";   
+                    else if (playerState == "run right"){   
+                        playerState = "run up-left";   
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look left") 
+                        playerState = "look up-left"; 
+                    else if (playerState == "run left"){   
+                        playerState = "run up-left";      
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-right")
+                        playerState = "look up-left"; 
+                    else if (playerState == "run up-right"){ 
+                        playerState = "run up-left"; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left"){
+                        playerState = "run up-left";    
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run up-left"){ 
+                        //nothing        
+                    }else if (playerState == "look down-right")
+                        playerState = "look up-left"; 
+                    else if (playerState == "run down-right"){ 
+                        playerState = "run up-left"; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-left") 
+                        playerState = "look up-left"; 
+                    else if (playerState == "run down-left"){   
+                        playerState = "run up-left";       
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = -PLAYER_RUN_SPEED;   
+                    }  
+                }    
+                //If 's' and 'd' are pressed 
+                else if(key == KeyEvent.VK_S && key == KeyEvent.VK_D){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look down-right"; 
+                    else if (playerState == "look up") 
+                        playerState = "look down-right"; 
+                    else if (playerState == "run up"){   
+                        playerState = "run down-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down") 
+                        playerState = "look down-right";          
+                    else if (playerState == "run down"){   
+                        playerState = "run down-right"; 
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right") 
+                        playerState = "look down-right";   
+                    else if (playerState == "run right"){   
+                        playerState = "run down-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look left") 
+                        playerState = "look down-right"; 
+                    else if (playerState == "run left"){   
+                        playerState = "run down-right";   
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED;    
+                    }else if (playerState == "look up-right") 
+                        playerState = "look down-right"; 
+                    else if (playerState == "run up-right"){ 
+                        playerState = "look down";       
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left") 
+                        playerState = "look down-right"; 
+                    else if (playerState == "run up-left"){ 
+                        playerState = "run down-right";    
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED;    
+                    }else if (playerState == "look down-right"){
+                        playerState = "run down-right"; 
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run down-right"){ 
+                        //nothing
+                    }else if (playerState == "look down-left") 
+                        playerState = "look down-right"; 
+                    else if (playerState == "run down-left"){      
+                        playerState = "run down-right";   
+                        playerVx = PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }
+                }    
+                //If 's' and 'a' is pressed 
+                else if(key == KeyEvent.VK_S && key == KeyEvent.VK_A){ 
+                    if (playerState == "stand normal") 
+                        playerState = "look down-left"; 
+                    else if (playerState == "look up") 
+                        playerState = "look down-left"; 
+                    else if (playerState == "run up"){    
+                        playerState = "run down-left";    
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down") 
+                        playerState = "look down-left";          
+                    else if (playerState == "run down"){   
+                        playerState = "run down-left"; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look right") 
+                        playerState = "look down-left";   
+                    else if (playerState == "run right"){   
+                        playerState = "run down-left";     
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look left") 
+                        playerState = "look down-left"; 
+                    else if (playerState == "run left"){   
+                        playerState = "run down-left";     
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED;    
+                    }else if (playerState == "look up-right") 
+                        playerState = "look down-left"; 
+                    else if (playerState == "run up-right"){  
+                        playerState = "run down-left"; 
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look up-left") 
+                        playerState = "look down-left"; 
+                    else if (playerState == "run up-left"){  
+                        playerState = "look down";    
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "look down-right") 
+                        playerState = "look down-left"; 
+                    else if (playerState == "run down-right"){  
+                        playerState = "look down";  
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED;    
+                    }else if (playerState == "look down-left"){  
+                        playerState = "run down-left";    
+                        playerVx = -PLAYER_RUN_SPEED; 
+                        playerVy = PLAYER_RUN_SPEED; 
+                    }else if (playerState == "run down-left"){    
+                        //nothing 
+                    }
+                }   
+            }
+        }   
+        public void keyReleased(KeyEvent e){               
+        } 
+        public void keyTyped(KeyEvent e){            
+        }
+    }   
+    static class GamePlayMouseListener implements MouseListener{   
+        public void mousePressed (MouseEvent e){
+            mouseClickX = e.getX(); 
+            mouseClickY = e.getY();       
+            
+            playerBulletX[currentBullet] = playerX + 25; 
+            playerBulletY[currentBullet] = playerY + 25;        
+            diffX = mouseClickX - playerX; 
+            diffY = mouseClickY - playerY; 
+            
+            playerBulletAngle[currentBullet] = (float)(Math.atan2(diffY,diffX)); 
+            playerBulletStepX[currentBullet] = (int)(PLAYER_BULLET_VELOCITY*Math.cos(playerBulletAngle[currentBullet]));                      
+            playerBulletStepY[currentBullet] = (int)(PLAYER_BULLET_VELOCITY*Math.sin(playerBulletAngle[currentBullet])); 
+            
+            playerBulletHitBox[currentBullet] = new Rectangle(playerBulletX[currentBullet],playerBulletY[currentBullet],BULLET_D,BULLET_D);            
+            playerBulletVisible[currentBullet] = true; 
+            
+            currentBullet = (currentBullet + 1)%NUM_PLAYER_BULLETS;    
+        }     
+        public void mouseReleased(MouseEvent e){}
+        public void mouseEntered(MouseEvent e){}
+        public void mouseExited(MouseEvent e){}
+        public void mouseClicked(MouseEvent e){}   
+    }          
+    static class ConfirmNameButtonListener implements ActionListener{
+        public void actionPerformed(ActionEvent e){ 
+            playerName = playerNameField.getText(); 
+        }     
+    }
+    static class GamePlayMouseMotionListener implements MouseMotionListener{
+        public void mouseDragged(MouseEvent e){}          
+        public void mouseMoved(MouseEvent e){     
+            mouseMotionX = e.getX(); 
+            mouseMotionY = e.getY(); 
+        } 
+        
+    }
+    public int getWindowWidth(){ 
+        return this.WINDOWWIDTH; 
+    } 
+    public int getWindowHeight(){ 
+        return this.WINDOWWIDTH; 
+    } 
+    public int getWindowTop(){ 
+        return this.TOP; 
+    } 
+    public int getWindowBottom(){ 
+        return this.BOTTOM;   
+    } 
+    public int getWindowRight(){ 
+        return this.RIGHT; 
+    } 
+    public int getWindowLeft(){ 
+        return this.LEFT; 
+    }      
+    public static int getPlayerX(){
+        return Wildlands.playerX; 
+    }   
+    public static int getPlayerY(){
+        return Wildlands.playerY; 
+    }   
+}            

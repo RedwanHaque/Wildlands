@@ -1,0 +1,59 @@
+/**
+ * Auto Generated Java Class.
+ */  
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+
+public class AnimalEnemy extends JPanel implements Runnable {
+    
+    //Animal Properties 
+    private static int numAnimal = (int)(11*Math.random()+1);    
+    
+    private static final int ENEMY_SPEED = 25; 
+    private static int[] enemyX = new int[numAnimal]; 
+    private static int[] enemyY = new int[numAnimal];    
+    
+    private static int[] dxEP = new int[numAnimal]; 
+    private static int[] dyEP = new int[numAnimal]; 
+    private static double[] vectorNorm = new double[numAnimal]; 
+
+    private static BufferedImage[] animalStatePic = new BufferedImage[2];    
+    private static int animalPicNum = 0; 
+    //Player Location 
+    private int playerX; 
+    private int playerY; 
+    
+    //Constructor to initialize playerX and playerY 
+    public AnimalEnemy(int playerX, int playerY){   
+        playerX = Wildlands.getPlayerX(); 
+        playerY = Wildlands.getPlayerY(); 
+    }   
+    
+    public void paintComponent(Graphics g){
+        super.paintComponent(g);    
+        for (int i = 0; i < numAnimal; i++){
+            g.drawImage(animalStatePic[animalPicNum], enemyX[i], enemyY[i], this); 
+        }
+    }
+    
+    //Enemy Movement
+    public void run(){   
+        while(true){   
+            for (int x = 0; x < numAnimal; x++){
+                dxEP[x] = playerX - enemyX[x]; 
+                dyEP[x] = playerY - enemyY[x];    
+                vectorNorm[x] = Math.sqrt(dxEP[x] * dxEP[x] + dyEP[x] * dyEP[x]);    
+                dxEP[x] *= (ENEMY_SPEED/vectorNorm[x]); 
+                dyEP[x] *= (ENEMY_SPEED/vectorNorm[x]);    
+            }
+        }  
+    }
+    
+    
+    
+}
